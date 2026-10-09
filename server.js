@@ -9,6 +9,14 @@ db.exec(`CREATE TABLE IF NOT EXISTS bookings(
   name TEXT NOT NULL, phone TEXT, date TEXT NOT NULL,
   start INTEGER NOT NULL, dur INTEGER NOT NULL, treat TEXT NOT NULL)`);
 
+// Tabella per i blocchi / chiusure straordinarie
+db.exec(`CREATE TABLE IF NOT EXISTS blocks(
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  date TEXT NOT NULL,
+  start INTEGER NOT NULL,
+  dur INTEGER NOT NULL,
+  reason TEXT)`);
+
 const app = express();
 app.use(express.json());
 app.use(express.static("public"));
@@ -21,19 +29,30 @@ app.get("/api/config", (req, res) => res.json({
   step: cfg.step, closedDays: cfg.closedDays,
 }));
 
-// Intervalli occupati di un giorno (senza dati personali)
+// Intervalli occupati e blocchi di un giorno (unificati per il calendario pubblico)
 app.get("/api/busy", (req, res) => {
   const date = String(req.query.date || "");
   if (!/^\d{4}-\d{2}-\d{2}$/.test(date)) return res.status(400).json({ error: "Data non valida" });
-  res.json(db.prepare("SELECT start, dur FROM bookings WHERE date=?").all(date));
+  
+  const bookings = db.prepare("SELECT start, dur FROM bookings WHERE date=?").all(date);
+  const blocks = db.prepare("SELECT start, dur FROM blocks WHERE date=?").all(date);
+  
+  // Restituisce sia le prenotazioni che i blocchi come intervalli occupati
+  res.json([...bookings, ...blocks]);
 });
 
-// Nuova prenotazione (controllo sovrapposizioni dentro una transazione)
+// Nuova prenotazione (controllo sovrapposizioni con prenotazioni E blocchi dentro una transazione)
 const insert = db.transaction((b) => {
-  const clash = db.prepare(
+  const clashBooking = db.prepare(
     "SELECT 1 FROM bookings WHERE date=? AND start < ? AND start + dur > ?"
   ).get(b.date, b.start + b.dur, b.start);
-  if (clash) return false;
+
+  const clashBlock = db.prepare(
+    "SELECT 1 FROM blocks WHERE date=? AND start < ? AND start + dur > ?"
+  ).get(b.date, b.start + b.dur, b.start);
+
+  if (clashBooking || clashBlock) return false;
+
   db.prepare("INSERT INTO bookings(name,phone,date,start,dur,treat) VALUES(?,?,?,?,?,?)")
     .run(b.name, b.phone, b.date, b.start, b.dur, b.treat);
   return true;
@@ -48,8 +67,9 @@ app.post("/api/book", (req, res) => {
   if (cfg.closedDays.includes(day.getDay())) return res.status(400).json({ error: "Giorno di chiusura" });
   if (!Number.isInteger(start) || start < cfg.open || start + t.minutes > cfg.close || (start - cfg.open) % cfg.step)
     return res.status(400).json({ error: "Orario non valido" });
+  
   const ok = insert({ name: name.trim().slice(0, 80), phone: String(phone || "").slice(0, 30), date, start, dur: t.minutes, treat: t.name });
-  if (!ok) return res.status(409).json({ error: "Orario appena occupato, scegline un altro" });
+  if (!ok) return res.status(409).json({ error: "Orario appena occupato o bloccato, scegline un altro" });
   res.json({ ok: true });
 });
 
@@ -71,11 +91,29 @@ app.post("/api/admin/login", (req, res) => {
 
 app.get("/api/admin/bookings", auth, (req, res) => {
   const today = new Date().toISOString().slice(0, 10);
-  res.json(db.prepare("SELECT * FROM bookings WHERE date >= ? ORDER BY date, start").all(today));
+  const bookings = db.prepare("SELECT * FROM bookings WHERE date >= ? ORDER BY date, start").all(today);
+  const blocks = db.prepare("SELECT * FROM blocks WHERE date >= ? ORDER BY date, start").all(today);
+  res.json({ bookings, blocks });
 });
 
 app.delete("/api/admin/bookings/:id", auth, (req, res) => {
   db.prepare("DELETE FROM bookings WHERE id=?").run(req.params.id);
+  res.json({ ok: true });
+});
+
+// Rotte per gestire i blocchi orari dall'admin
+app.post("/api/admin/blocks", auth, (req, res) => {
+  const { date, start, dur, reason } = req.body || {};
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(date || "") || !Number.isInteger(start) || !Number.isInteger(dur)) {
+    return res.status(400).json({ error: "Dati blocco non validi" });
+  }
+  db.prepare("INSERT INTO blocks(date, start, dur, reason) VALUES(?,?,?,?)")
+    .run(date, start, dur, String(reason || "Imprevisto").slice(0, 100));
+  res.json({ ok: true });
+});
+
+app.delete("/api/admin/blocks/:id", auth, (req, res) => {
+  db.prepare("DELETE FROM blocks WHERE id=?").run(req.params.id);
   res.json({ ok: true });
 });
 
