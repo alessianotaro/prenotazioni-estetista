@@ -62,11 +62,27 @@ app.post("/api/book", (req, res) => {
   const { name, phone, date, start, treatment } = req.body || {};
   const t = cfg.treatments[treatment];
   const day = new Date(date + "T12:00");
+  
   if (!t || !/^\d{4}-\d{2}-\d{2}$/.test(date || "") || isNaN(day)) return res.status(400).json({ error: "Dati non validi" });
   if (!name || name.trim().split(/\s+/).length < 2) return res.status(400).json({ error: "Inserisci nome e cognome" });
-  if (cfg.closedDays.includes(day.getDay())) return res.status(400).json({ error: "Giorno di chiusura" });
-  if (!Number.isInteger(start) || start < cfg.open || start + t.minutes > cfg.close || (start - cfg.open) % cfg.step)
-    return res.status(400).json({ error: "Orario non valido" });
+  
+  const dayOfWeek = day.getDay(); // 0=Dom, 1=Lun, 2=Mar, 3=Mer, 4=Gio, 5=Ven, 6=Sab
+  if (cfg.closedDays.includes(dayOfWeek)) return res.status(400).json({ error: "Giorno di chiusura" });
+
+  // Regola orari specifici per i giorni della settimana
+  let dayOpen = cfg.open;
+  let dayClose = cfg.close;
+
+  if ([1, 3, 5].includes(dayOfWeek)) {
+    dayOpen = 14 * 60; // Dalle 14:00 per Lun, Mer, Ven
+  } else if ([2, 4].includes(dayOfWeek)) {
+    dayOpen = 8 * 60;  // Dalle 08:00 per Mar, Gio
+  } else {
+    return res.status(400).json({ error: "Giorno di chiusura" });
+  }
+
+  if (!Number.isInteger(start) || start < dayOpen || start + t.minutes > dayClose || (start - dayOpen) % cfg.step)
+    return res.status(400).json({ error: "Orario non valido per questo giorno" });
   
   const ok = insert({ name: name.trim().slice(0, 80), phone: String(phone || "").slice(0, 30), date, start, dur: t.minutes, treat: t.name });
   if (!ok) return res.status(409).json({ error: "Orario appena occupato o bloccato, scegline un altro" });
