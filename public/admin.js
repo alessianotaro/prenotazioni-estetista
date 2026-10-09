@@ -45,7 +45,19 @@ async function agenda() {
       h += `<div class="c"><b>${it(item.date)}</b>`;
     }
     if (item.type === 'booking') {
-      h += `<div class="r"><b>${hm(item.start)}–${hm(item.start + item.dur)}</b> · ${esc(item.name)}<br><span class="m">${esc(item.treat)}${item.phone ? " · " + esc(item.phone) : ""}</span> <a onclick="delBooking(${item.id})">annulla</a></div>`;
+      // Creazione del link WhatsApp precompilato (pulisce il numero rimuovendo spazi/trattini)
+      const cleanPhone = (item.phone || "").replace(/\D/g, "");
+      const waMsg = encodeURIComponent(`Ciao ${item.name}, ti ricordo il tuo appuntamento per ${item.treat} il giorno ${it(item.date)} alle ore ${hm(item.start)}. A presto! ✨`);
+      const waLink = cleanPhone ? `https://wa.me/${cleanPhone.startsWith('3') && cleanPhone.length === 10 ? '39' + cleanPhone : cleanPhone}?text=${waMsg}` : '';
+
+      h += `<div class="r">
+        <b>${hm(item.start)}–${hm(item.start + item.dur)}</b> · ${esc(item.name)}<br>
+        <span class="m">${esc(item.treat)}${item.phone ? " · " + esc(item.phone) : ""}</span><br>
+        <div style="margin-top:4px;display:flex;gap:8px;align-items:center;">
+          ${waLink ? `<a href="${waLink}" target="_blank" style="background:#25d366;color:#fff;padding:4px 8px;border-radius:6px;text-decoration:none;font-size:12px">💬 WhatsApp</a>` : ''}
+          <a onclick="delBooking(${item.id})" style="color:#c0392b;">annulla</a>
+        </div>
+      </div>`;
     } else {
       h += `<div class="r block-box"><b>${hm(item.start)}–${hm(item.start + item.dur)}</b> · 🔒 <i>${esc(item.name)}</i><br><span class="m">Fascia bloccata</span> <a onclick="delBlock(${item.id})">rimuovi blocco</a></div>`;
     }

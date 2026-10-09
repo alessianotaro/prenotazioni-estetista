@@ -13,7 +13,7 @@ function slots() {
   const dayOfWeek = new Date(sel + "T12:00").getDay();
   let openTime = cfg.open;
   if ([1, 3, 5].includes(dayOfWeek)) {
-    openTime = 14 * 60; // Lun, Mer, Ven solo pomeriggio dalle 14:00
+    openTime = 14 * 60; // Lun, Mer, Ven solo pomeriggio dalle 14:00 (corretto da 14 60 a 14 * 60)
   }
 
   for (let t = openTime; t + dur <= cfg.close; t += cfg.step) {
@@ -45,7 +45,8 @@ function render() {
       slots().forEach(([t, ok]) => { if (ok) any = true; h += `<button class="${start === t ? "on" : ""}" ${ok ? "" : "disabled"} onclick="start=${t};render()">${hm(t)}</button>` });
       h += `</div>${any ? "" : '<p class="m">Nessun orario disponibile, prova un altro giorno.</p>'}`;
     }
-    if (start !== null) h += `<p class="m">3. I tuoi dati</p><input id="nm" placeholder="Nome e cognome"><input id="ph" placeholder="Telefono (facoltativo)" type="tel"><p class="e">${err}</p><button class="p" id="go" onclick="book()">Conferma ${hm(start)} – ${hm(start + cfg.treatments[tr].minutes)}</button>`;
+    // Telefono reso esplicitamente obbligatorio
+    if (start !== null) h += `<p class="m">3. I tuoi dati</p><input id="nm" placeholder="Nome e cognome"><input id="ph" placeholder="Numero di telefono (obbligatorio)" type="tel"><p class="e">${err}</p><button class="p" id="go" onclick="book()">Conferma ${hm(start)} – ${hm(start + cfg.treatments[tr].minutes)}</button>`;
     h += "</div>";
   }
   h += `<p style="text-align:center"><a class="l" href="admin.html">Area estetista</a></p>`;
@@ -58,7 +59,16 @@ function mv(n) { mon.setMonth(mon.getMonth() + n); render(); }
 async function load() { busy = await (await fetch("/api/busy?date=" + sel)).json(); }
 async function pick(k) { sel = k; start = null; await load(); render(); }
 async function book() {
-  const name = document.getElementById("nm").value, phone = document.getElementById("ph").value;
+  const name = document.getElementById("nm").value;
+  const phone = document.getElementById("ph").value;
+
+  // Controllo obbligatorietà del telefono
+  if (!phone || phone.trim().length < 6) {
+    err = "Inserisci un numero di telefono valido";
+    render();
+    return;
+  }
+
   document.getElementById("go").disabled = true;
   const r = await fetch("/api/book", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ name, phone, date: sel, start, treatment: tr }) });
   const j = await r.json();
