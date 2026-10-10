@@ -24,12 +24,17 @@ async function agenda() {
   <div class="c">
     <b>Blocca orario / Chiusura</b>
     <input type="date" id="b-date">
-    <div style="display:flex;gap:8px">
+    <div style="margin: 8px 0;">
+      <label style="font-size: 13px; cursor: pointer;">
+        <input type="checkbox" id="b-all-day" onchange="toggleAllDay(this)"> 📅 Intera giornata
+      </label>
+    </div>
+    <div id="time-inputs" style="display:flex;gap:8px">
       <input type="time" id="b-start" value="09:00">
       <input type="time" id="b-end" value="13:00">
     </div>
-    <input type="text" id="b-reason" placeholder="Motivo (es. Visita, Chiusura straordinaria)">
-    <button onclick="addBlock()">Blocca fascia oraria</button>
+    <input type="text" id="b-reason" placeholder="Motivo (es. Ferie, Visita, Chiusura straordinaria)" style="margin-top:8px">
+    <button onclick="addBlock()" style="margin-top:8px">Blocca fascia oraria</button>
   </div>`;
 
   const items = [
@@ -45,7 +50,6 @@ async function agenda() {
       h += `<div class="c"><b>${it(item.date)}</b>`;
     }
     if (item.type === 'booking') {
-      // Creazione del link WhatsApp precompilato (pulisce il numero rimuovendo spazi/trattini)
       const cleanPhone = (item.phone || "").replace(/\D/g, "");
       const waMsg = encodeURIComponent(`Ciao ${item.name}, ti ricordo il tuo appuntamento per ${item.treat} il giorno ${it(item.date)} alle ore ${hm(item.start)}. A presto! ✨`);
       const waLink = cleanPhone ? `https://wa.me/${cleanPhone.startsWith('3') && cleanPhone.length === 10 ? '39' + cleanPhone : cleanPhone}?text=${waMsg}` : '';
@@ -64,6 +68,21 @@ async function agenda() {
   });
 
   $.innerHTML = h + (items.length ? "</div>" : '<p class="m">Nessun impegno in programma.</p>') + `<a onclick="sessionStorage.removeItem('tk');loginView()">Esci</a>`;
+}
+
+function toggleAllDay(checkbox) {
+  const timeInputs = document.getElementById("time-inputs");
+  if (checkbox.checked) {
+    document.getElementById("b-start").value = "08:00";
+    document.getElementById("b-end").value = "19:00";
+    timeInputs.style.opacity = "0.5";
+    document.getElementById("b-start").disabled = true;
+    document.getElementById("b-end").disabled = true;
+  } else {
+    timeInputs.style.opacity = "1";
+    document.getElementById("b-start").disabled = false;
+    document.getElementById("b-end").disabled = false;
+  }
 }
 
 async function addBlock() {
