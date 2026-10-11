@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="utf-8">
+  <title>Preventivo - Sistema Prenotazioni</title>
+  <style>
+    body { font-family: system-ui, sans-serif; color: #3a2e2e; background: #fff; margin: 0; padding: 40px; line-height: 1.5; }
+    .container { max-width: 600px; margin: 0 auto; border: 1px solid #ecdcdc; border-radius: 16px; padding: 32px; background: #fff; }
+    h1 { font-family: Georgia, serif; font-size: 24px; margin-top: 0; color: #c9788a; }
+    h2 { font-size: 16px; border-bottom: 2px solid #ecdcdc; padding-bottom: 6px; margin-top: 24px; color: #5a4e4e; }
+    p, li { font-size: 14px; }
+    ul { padding-left: 20px; }
+    .meta { display: flex; justify-content: space-between; margin-bottom: 24px; font-size: 14px; color: #8a7a7a; }
+    table { width: 100%; border-collapse: collapse; margin-top: 16px; margin-bottom: 24px; }
+    th, td { border: 1px solid #ecdcdc; padding: 10px; text-align: left; font-size: 14px; }
+    th { background: #fdf6f4; }
+    .notes-box { border: 1px dashed #c9788a; border-radius: 10px; padding: 12px; background: #fdf6f4; margin-top: 16px; min-height: 70px; font-size: 13px; color: #5a4e4e; }
+    .signatures { margin-top: 40px; display: flex; justify-content: space-between; font-size: 13px; }
+    .sig-line { border-top: 1px solid #3a2e2e; width: 200px; margin-top: 40px; padding-top: 4px; text-align: center; }
+    .print-btn { display: block; width: 100%; background: #c9788a; color: #fff; border: 0; padding: 12px; border-radius: 10px; font-size: 16px; font-weight: 600; cursor: pointer; margin-bottom: 20px; }
+    @media print { .print-btn { display: none; } body { padding: 0; } .container { border: none; padding: 0; } }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <button class="print-btn" onclick="window.print()">🖨️ Salva come PDF / Stampa</button>
+    
+    <h1>Proposta di Collaborazione</h1>
+    <div class="meta">
+      <div><b>Cliente:</b> Antonietta Maugeri</div>
+      <div><b>Sviluppatore:</b>  Ing. Informatico Alessia Notaro</div>
+    </div>
+
+    <h2>1. Panoramica del Progetto</h2>
+    <p>Realizzazione di un sito web di prenotazione su misura, accessibile da qualsiasi smartphone o computer, progettata specificamente per eliminare la gestione telefonica caotica, azzerare i buchi in agenda e offrire un'esperienza moderna ai clienti.</p>
+
+    <h2>2. Funzionalità Incluse</h2>
+    <ul>
+      <li><b>Calendario interattivo 24/7:</b> Scelta autonoma di trattamenti e orari.</li>
+      <li><b>Orari intelligenti personalizzati:</b> Martedì e Giovedì (08:00–19:00); Lunedì, Mercoledì e Venerdì (14:00–19:00); Chiuso sab/dom.</li>
+      <li><b>Area Amministrativa Protetta:</b> Gestione appuntamenti in tempo reale tramite password.</li>
+      <li><b>Blocco Orari Straordinari:</b> Funzione rapida per imprevisti o chiusure.</li>
+      <li><b>Integrazione WhatsApp "Smart":</b> Pulsante rapido per inviare promemoria e riepiloghi senza costi fissi.</li>
+      <li><b>Contatto Obbligatorio:</b> Numero di telefono obbligatorio in fase di prenotazione.</li>
+    </ul>
+
+    <h2>3. Costi di Sviluppo </h2>
+    <table>
+      <tr>
+        <th>Descrizione</th>
+        <th>Importo</th>
+      </tr>
+      <tr>
+        <td>Sviluppo completo, configurazione database, test e messa online (chiavi in mano)</td>
+        <td><b>  </b></td>
+      </tr>
+    </table>
+    <p style="font-size: 12px; color: #8a7a7a;">*Nessun costo di commissione sulle prenotazioni. Il sito sarà interamente di proprietà dell'attività.</p>
+
+    <h2>4. Assistenza, Manutenzione, Aggiornamento e Modifica</h2>
+    <p><b>€ 30,00 </b> — Include monitoraggio, backup e piccoli aggiornamenti di routine (es. modifiche listino o orari o modifiche al sito).</p>
+
+    <h2>5. Postille e Note Aggiuntive</h2>
+    <div class="notes-box">
+      Eventuali accordi particolari, personalizzazioni extra o note concordate tra le parti:<br><br>
+      <i>• .............................................................................................................................</i><br>
+      <i>• .............................................................................................................................</i>
+    </div>
+
+    <div class="signatures">
+      <div class="sig-line">Antonietta Maugeri</div>
+      <div class="sig-line">Ing. Alessia Notaro </div>
+    </div>
+  </div>
+</body>
+</html>
