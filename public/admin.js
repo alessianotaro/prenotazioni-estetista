@@ -171,6 +171,12 @@ async function delBlock(id) {
 
 tok() ? agenda() : loginView();
 
+
+
+
+
+
+
 // const $ = document.getElementById("app");
 // const pad = n => String(n).padStart(2, "0"), hm = m => pad(Math.floor(m / 60)) + ":" + pad(m % 60);
 // const it = d => new Date(d + "T12:00").toLocaleDateString("it-IT", { weekday: "long", day: "numeric", month: "long" });
