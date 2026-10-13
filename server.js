@@ -1,9 +1,11 @@
 const express = require("express");
 const crypto = require("crypto");
 const Database = require("better-sqlite3");
+
 const cfg = require("./config");
 
 const db = new Database(process.env.DB_PATH || "prenotazioni.db");
+
 db.exec(`CREATE TABLE IF NOT EXISTS bookings(
   id INTEGER PRIMARY KEY AUTOINCREMENT,
   name TEXT NOT NULL, phone TEXT, date TEXT NOT NULL,
@@ -37,7 +39,6 @@ app.get("/api/busy", (req, res) => {
   const bookings = db.prepare("SELECT start, dur FROM bookings WHERE date=?").all(date);
   const blocks = db.prepare("SELECT start, dur FROM blocks WHERE date=?").all(date);
   
-  // Restituisce sia le prenotazioni che i blocchi come intervalli occupati
   res.json([...bookings, ...blocks]);
 });
 
@@ -69,7 +70,6 @@ app.post("/api/book", (req, res) => {
   const dayOfWeek = day.getDay(); // 0=Dom, 1=Lun, 2=Mar, 3=Mer, 4=Gio, 5=Ven, 6=Sab
   if (cfg.closedDays.includes(dayOfWeek)) return res.status(400).json({ error: "Giorno di chiusura" });
 
-  // Regola orari specifici per i giorni della settimana
   let dayOpen = cfg.open;
   let dayClose = cfg.close;
 
@@ -106,9 +106,9 @@ app.post("/api/admin/login", (req, res) => {
 });
 
 app.get("/api/admin/bookings", auth, (req, res) => {
-  const today = new Date().toISOString().slice(0, 10);
-  const bookings = db.prepare("SELECT * FROM bookings WHERE date >= ? ORDER BY date, start").all(today);
-  const blocks = db.prepare("SELECT * FROM blocks WHERE date >= ? ORDER BY date, start").all(today);
+  // Modificato per mostrare tutti gli appuntamenti (anche storici), utile per verificare la persistenza
+  const bookings = db.prepare("SELECT * FROM bookings ORDER BY date, start").all();
+  const blocks = db.prepare("SELECT * FROM blocks ORDER BY date, start").all();
   res.json({ bookings, blocks });
 });
 
